@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t lombaardj/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run lombaardj/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t lombaardj/multi-client ./client
+    - docker build -t lombaardj/multi-nginx ./nginx
+    - docker build -t lombaardj/multi-server ./server
+    - docker build -t lombaardj/multi-worker ./worker
+    #Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those images and push them to Docker Hub
+    - docker push lombaardj/multi-client
+    - docker push lombaardj/multi-nginx
+    - docker push lombaardj/multi-server
+    - docker push lombaardj/multi-worker
